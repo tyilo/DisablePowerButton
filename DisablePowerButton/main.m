@@ -7,15 +7,28 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 
-int main(int argc, const char * argv[])
-{
+static CGEventRef callback(CGEventTapProxy proxy, CGEventType type, CGEventRef cgEvent, void *refcon) {
+	if(type == NSSystemDefined) {
+		NSEvent *event = [NSEvent eventWithCGEvent:cgEvent];
+		
+		if(event.subtype == 1) { // Power button event
+			return NULL;
+		}
+	}
+	
+	return cgEvent;
+}
 
+int main(int argc, const char * argv[]) {
 	@autoreleasepool {
-	    
-	    // insert code here...
-	    NSLog(@"Hello, World!");
-	    
+		CFMachPortRef eventTap = CGEventTapCreate(0, 0, kCGEventTapOptionDefault, NSSystemDefinedMask, callback, NULL);
+		
+		CFRunLoopSourceRef runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0);
+		CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, kCFRunLoopCommonModes);
+		
+		CFRunLoopRun();
 	}
     return 0;
 }
